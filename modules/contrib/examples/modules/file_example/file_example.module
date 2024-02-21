@@ -1,0 +1,34 @@
+<?php
+
+/**
+ * @file
+ * Examples demonstrating the Drupal File API.
+ */
+
+use Drupal\Core\StreamWrapper\StreamWrapperManager;
+
+/**
+ * Implements hook_file_download().
+ *
+ * @see file_example.routing.yml
+ */
+function file_example_file_download($uri) {
+  $scheme = StreamWrapperManager::getScheme($uri);
+  if (in_array($scheme, ['private', 'temporary', 'session'])) {
+    // @see file_example.permissions.yml
+    $permission = "read $scheme files";
+    $current_user = \Drupal::currentUser();
+    $account = $current_user->getAccount();
+    if ($account->hasPermission($permission)) {
+      // If the user has permission, return an array with the appropriate
+      // headers.
+      // @see hook_file_download()
+      return [
+        'Content-Type: text/plain',
+      ];
+    }
+  }
+  // If the user does not have permission to access the file, return -1.
+  // @see hook_file_download()
+  return -1;
+}
